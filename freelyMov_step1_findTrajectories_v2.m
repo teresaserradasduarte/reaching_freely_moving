@@ -204,7 +204,7 @@ if  exist(strcat(out_mat_folder,filesep,'session_raw_data.mat'),'file')~=2
             'width','height','widthB','heightB','likelihood_threshold','frame_rate', ...
             'csvs', 'n_trials', 'siz', 'max_siz', 'camA', 'camB',...
             'paw_A','pawA_in_row','snout_A','snoutA_in_row','water_A','waterA_in_row','water',...
-            'tongue_A','tongueA_in_row',...
+            'tongue_A','tongueA_in_row','tongue',...
             'pawR_B','pawL_B','wat_B','water_posB','n_max_points',...
             '-v7.3');
     end
@@ -344,6 +344,7 @@ reach_trial = [];
 reach_range_mat = [];
 reach_mat = [];
 water_reach_mat = [];
+lick_reach_mat = [];
 reach_speed_mat = [];
 
 r_paw_used_mat = [];
@@ -505,6 +506,7 @@ for tt = 1:n_trials
                     last_frame_prev_tt2 = siz(tt-2);
                     last_trials=cat(1,paw(1:last_frame_prev_tt2,:,tt-2),paw(1:last_frame_prev_tt1,:,tt-1));
                     last_trials_speed=cat(1,speed_paw(1:last_frame_prev_tt2,:,tt-2),speed_paw(1:last_frame_prev_tt1,:,tt-1));
+                    last_trials_lick=cat(1,tongue_A(1:last_frame_prev_tt2,:,tt-2),tongue_A(1:last_frame_prev_tt1,:,tt-1));
                     last_trials_water=cat(1,water_A(1:last_frame_prev_tt2,:,tt-2),water_A(1:last_frame_prev_tt1,:,tt-1));
                     last_trials_pawR_B=cat(1,pawR_B(1:last_frame_prev_tt2,:,tt-2),pawR_B(1:last_frame_prev_tt1,:,tt-1));
                     last_trials_pawL_B=cat(1,pawL_B(1:last_frame_prev_tt2,:,tt-2),pawL_B(1:last_frame_prev_tt1,:,tt-1));
@@ -512,6 +514,7 @@ for tt = 1:n_trials
                     last_trials=paw(1:last_frame_prev_tt1,:,tt-1);
                     last_trials_speed=speed_paw(1:last_frame_prev_tt1,:,tt-1);
                     last_trials_water=water_A(1:last_frame_prev_tt1,:,tt-1);
+                    last_trials_lick=tongue_A(1:last_frame_prev_tt1,:,tt-1);
                     if front_tracked_flag==true
                         last_trials_pawR_B=pawR_B(1:last_frame_prev_tt1,:,tt-1);
                         last_trials_pawL_B=pawL_B(1:last_frame_prev_tt1,:,tt-1);
@@ -525,6 +528,7 @@ for tt = 1:n_trials
                 reach=cat(1,squeeze(last_trials(reach_prev,:)),squeeze(paw(reach_curr,:,tt)));
                 reach_speed=cat(1,squeeze(last_trials_speed(reach_prev,:)),squeeze(speed_paw(reach_curr,:,tt)));
                 water_reach=cat(1,squeeze(last_trials_water(reach_prev,:)),squeeze(water_A(reach_curr,:,tt)));
+                lick_reach=cat(1,squeeze(last_trials_lick(reach_prev,:)),squeeze(tongue_A(reach_curr,:,tt)));
                 if front_tracked_flag==true
                     pawR_B_reach = cat(1,squeeze(last_trials_pawR_B(reach_prev,:)),squeeze(pawR_B(reach_curr,:,tt)));
                     pawL_B_reach = cat(1,squeeze(last_trials_pawL_B(reach_prev,:)),squeeze(pawL_B(reach_curr,:,tt)));
@@ -539,6 +543,7 @@ for tt = 1:n_trials
                 reach=cat(1,squeeze(paw(reach_curr,:,tt)),squeeze(paw(reach_nex,:,tt+1)));
                 reach_speed=cat(1,squeeze(speed_paw(reach_curr,:,tt)),squeeze(speed_paw(reach_nex,:,tt+1)));
                 water_reach=cat(1,squeeze(paw(reach_curr,:,tt)),squeeze(paw(reach_nex,:,tt+1)));
+                lick_reach=cat(1,squeeze(tongue_A(reach_curr,:,tt)),squeeze(tongue_A(reach_nex,:,tt+1)));
                 if front_tracked_flag==true
                     pawR_B_reach=cat(1,squeeze(pawR_B(reach_curr,:,tt)),squeeze(pawR_B(reach_nex,:,tt+1)));
                     pawL_B_reach=cat(1,squeeze(pawL_B(reach_curr,:,tt)),squeeze(pawL_B(reach_nex,:,tt+1)));
@@ -549,6 +554,7 @@ for tt = 1:n_trials
                 reach=squeeze(paw(reach_range,:,tt));
                 reach_speed=squeeze(speed_paw(reach_range,:,tt));
                 water_reach=squeeze(water_A(reach_range,:,tt));
+                lick_reach=squeeze(tongue_A(reach_range,:,tt));
                 if front_tracked_flag==true
                     pawR_B_reach=squeeze(pawR_B(reach_range,:,tt));
                     pawL_B_reach=squeeze(pawL_B(reach_range,:,tt));
@@ -1013,6 +1019,7 @@ for tt = 1:n_trials
             reach_range_mat = cat(1,reach_range_mat,reach_range);
             reach_mat = cat(3,reach_mat,reach);
             water_reach_mat = cat(3,water_reach_mat,water_reach);
+            lick_reach_mat = cat(3,lick_reach_mat,lick_reach);
             reach_speed_mat = cat(3,reach_speed_mat,reach_speed);
             if front_tracked_flag==true
                 r_paw_used_mat = cat(1,r_paw_used_mat,r_paw_used);
@@ -1104,6 +1111,7 @@ reaches.reach_trial =reach_trial;
 reaches.reach_range_mat = reach_range_mat;
 reaches.reach_mat = reach_mat;
 reaches.water_reach_mat = water_reach_mat;
+reaches.lick_reach_mat = lick_reach_mat;
 reaches.reach_speed_mat = reach_speed_mat;
 reaches.time_range = time_range;
 

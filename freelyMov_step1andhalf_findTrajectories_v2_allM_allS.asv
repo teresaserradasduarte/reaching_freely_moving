@@ -38,7 +38,7 @@ mice_path = cell(num_animals,1);
 
 
 
-for m = 1:num_animals
+for m = 8:10% :num_animals
     mice(m,1)=cellstr(convertCharsToStrings(folders_mice(m,1).name));
     mice_path(m,1) = strcat(data_path, filesep, mice(m,1));
 

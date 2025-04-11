@@ -7,12 +7,13 @@ mat_folder = 'D:\Learning Lab Dropbox\Learning Lab Team Folder\Patlab protocols\
 out_folder = 'D:\Learning Lab Dropbox\Learning Lab Team Folder\Patlab protocols\Data\TD\behavior_data\analyzed_data\output_files';
 
 %data_pathA = '/Users/teresaserradasduarte/Dropbox (Learning Lab)/Learning Lab Team Folder/Patlab protocols/data/TD/raw_data';
-project_name = '20250106_A2aCasp_G2';
-setup = 'freely_mov';
+project_name = '20211124_AtaxicMice_G3';
+%setup = 'freely_mov';
+setup = 'freely_moving';
 data_path = strcat(raw_folder,filesep,project_name,filesep,setup);
 % Find mouse folders
 folders_mice = dir(data_path);
-folders_mice=folders_mice(3:end,:);
+folders_mice=folders_mice(4:end,:);
 num_animals=size(folders_mice,1);
 % Allocate space for mouse cells
 mice = cell(num_animals,1);
@@ -20,6 +21,21 @@ mice_path = cell(num_animals,1);
 
 % Log file search
 searchstr = '*GlobalLogInt';
+sessions_TOT = {'S1';'S2'};
+nr_sess_all = length(sessions_TOT);
+
+plot_group_total_flag = 1;
+if plot_group_total_flag == 1
+    ablat = 'dtx';
+    ctr_range = [1,2];
+    ablat_range = [3,4];
+    if strcmp(ablat,"a2a")
+        clrs_abl = [216,27,96]./256;
+    elseif strcmp(ablat,"dtx")
+        clrs_abl = [234,162,33]./256;
+    end
+    wts_clr = [74,98,116]./256;
+end
 
 % Save path
 % Save mat file
@@ -31,6 +47,11 @@ mkdir(out_path);
 
 %% Loop through mice: all sessions
 %m=1
+
+% Allocate spare for searching the total nr of trials
+nr_trials_all_m = zeros(nr_sess_all,num_animals);
+
+
 for m = 1: num_animals
     mice(m,1)=cellstr(convertCharsToStrings(folders_mice(m,1).name));
     mice_path(m,1) = strcat(data_path, filesep, mice(m,1));
@@ -250,35 +271,92 @@ for m = 1: num_animals
     hold on
     %plot(tickss(2:4:end),nr_trials_all/10,'r*')
     hold off
-    %ylim([0 50])
+    ylim([0 50])
     title(sprintf('%s%d%s','Number of trials per ',sliding_win,' seconds, across sessions'))
     
     %     xticks(tickss);
     %     xticklabels(tick_labels)
-    ylabel('Number of water droplets reached')
+    ylabel('Number of water droplets delivered')
     xlabel('time across sessions (min)')
     saveas(gcf,strcat(saveDirOut_mouseX,filesep,'number_trials_overSessions_slidingWin.png'),'png')
+    saveas(gcf,strcat(saveDirOut_mouseX,filesep,'number_trials_overSessions_slidingWin.epsc'),'epsc')
 
 
     %%
-        figure
+    figure
     plot(nr_trials_all,'-ko','LineWidth',1.5);
     set(gca,'linewidth',1.5,'box','off','layer','top','GridAlpha',0.05,'TickLength',[0.002, 0.001]);
     title('Nr of trials per session')
     xticklabels(sessions)
     xlabel('sessions'); ylabel('number of trials')
     saveas(gcf,strcat(saveDirOut_mouseX,filesep,'number_trials_session.png'),'png')
-    
-    
-    
+
+
+    nr_trials_all_m(:,m) = nr_trials_all;
+
 end
 
 
+%%
+ nxh1 = 1;
+ max_n_group = max(length(ctr_range),length(ablat_range));
+ vec_nr_trials =nan(max_n_group,(nxh1*3)-1);
+ vec_nr_trials(1:length(ctr_range),1:3:nxh1*3)=nr_trials_all_m(2,ctr_range)';
+ vec_nr_trials(1:length(ablat_range),2:3:nxh1*3+1)=nr_trials_all_m(2,ablat_range)';
+ length_n_Trials=size(vec_nr_trials,1);
+ [h_nTrials,sig_nTrials]=ttest2(vec_nr_trials(:,1),vec_nr_trials(:,2));
+
+
+ %%
+
+ clrs = cat(1,wts_clr,clrs_abl);
+ figure()
+
+boxplot(vec_nr_trials,'Symbol', 'k.','Color','k','Widths',0.8);
+hold on
+for pos=1:size(vec_nr_trials,2)
+    if ismember(pos,1:3:nxh1*3), c=1; else, c=2; end
+    f=scatter(ones(1,length_n_Trials)+(pos-1).*(1+(rand(01,length_n_Trials)-0.5)/50),vec_nr_trials(:,pos),[],clrs(c,:),'filled','LineWidth',1.5);
+end
+hold off
+axis square;% ylim([-20 250])
+XTickLabel={'CTR';'DTX'};
+set(gca,'XTickLabel',XTickLabel); ylabel('Nr of trials');
+set(gca,'linewidth',1.2,'box','off','layer','top','GridAlpha',0.05);
+title({'Nr trials',sprintf('%s%1.3f','sig = ',sig_nTrials)})
+
+saveas(gcf,strcat(out_path,filesep,'boxplot_nr_trials.png'),'png')
+saveas(gcf,strcat(out_path,filesep,'boxplot_nr_trials.epsc'),'epsc')
+    
+    
+
+
+ 
+%%
+
+axeOpt = {'linewidth',1.5,'box','off','GridAlpha',0.05,'ticklength',[1,1]*.01};
+lw = 1.5;
+
+figure()
+plot(nr_trials_all_m(:,ctr_range),'LineWidth',lw,'Color',wts_clr); hold on
+plot(nr_trials_all_m(:,ablat_range),'LineWidth',lw,'Color',clrs_abl);hold off
+xlim([.8 nr_sess_all+.2])
+set(gca,axeOpt{:})
+title('Nr of trials per session')
+xticks(1:nr_sess_all)
+xticklabels(sessions_TOT)
+xlabel('sessions'); ylabel('number of trials')
+legend(cat(1,mice(ctr_range),mice(ablat_range)),'box','off','location','southeastoutside','Interpreter', 'none')
+saveas(gcf,strcat(out_path,filesep,'number_trials_session_learning.png'),'png')
+saveas(gcf,strcat(out_path,filesep,'number_trials_session_learning.epsc'),'epsc')
+    
+    
 
 %% Save
 save(strcat(mat_path,filesep,'logdata_load.mat'),...
     'mice','folders_mice','sessions','folders_session',...
-    'data_path','mat_path','out_path','sessions');
+    'data_path','mat_path','out_path','sessions','nr_trials_all_m',...
+    'vec_nr_trials','sig_nTrials');
 %
 %     'duration_reach','reach_time','tickss','tick_labels',...
 %     'count_reaches_per_unit_allSess','sliding_win','nr_trials_all');
